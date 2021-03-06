@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  amgus_lot_apps:
+    container_name: "amgus_lot_apps"
+    restart: always
+    build:
+      context: ./
+      dockerfile: "src/Dockerfile"
+    expose:
+      - "80"
+    environment:
+      - TZ=Asia/Tokyo
+    volumes:
+      - ./src:/src
+    ports:
+      - "9080:9080"
+    command: python /src/apps/manage.py runserver
