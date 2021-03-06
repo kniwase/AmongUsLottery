@@ -4,7 +4,13 @@ import argparse
 def runserver():
     from app import api
     import uvicorn
-    uvicorn.run(app=api, host="0.0.0.0", port=9080)
+    uvicorn.run(
+        app=api,
+        host="0.0.0.0",
+        port=9080,
+        proxy_headers=True,
+        forwarded_allow_ips="*"
+    )
 
 
 # コマンドライン引数パーサー
