@@ -164,10 +164,9 @@ module.exports = {
     },
   },
   mounted() {
+    this.updateRoomProps();
     if (store.getters.joined) {
-      this.updateRoomProps();
       this.setUpdateRoomPropsTimer();
-    } else {
     }
   },
   destroyed() {
