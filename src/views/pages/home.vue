@@ -105,8 +105,29 @@ module.exports = {
     };
   },
   methods: {
+    makeToast(message, variant = null) {
+      this.$bvToast.toast(message, {
+        title: "通知",
+        autoHideDelay: 5000,
+        variant: variant,
+        solid: true,
+      });
+    },
     commitRoomProps(roomProps) {
+      const isWinnerPrev = store.getters.isWinner;
+      const isAdminPrev = store.getters.isAdmin;
       store.commit("setRoomProps", roomProps);
+      if (store.getters.joined) {
+        if (!isWinnerPrev && store.getters.isWinner) {
+          this.makeToast("特殊役になりました", "danger");
+        } else if (isWinnerPrev && !store.getters.isWinner) {
+          this.makeToast("通常役になりました", "info");
+        } else if (!isAdminPrev && store.getters.isAdmin) {
+          this.makeToast("管理者になりました", "secondary");
+        } else if (isAdminPrev && !store.getters.isAdmin) {
+          this.makeToast("管理者権限を奪われました", "secondary");
+        }
+      }
     },
     updateRoomProps() {
       axios
