@@ -76,6 +76,15 @@ async def delete_member(room_name: str, user_name: str):
         return JSONResponse({"error": res["ret"]}, status_code=400)
 
 
+@router_api.put("/rooms/{room_name}/roles", response_model=models.Room)
+async def change_role_settings(room_name: str, roles: List[models.Role]):
+    res = await utils.change_role_settings(room_name, roles)
+    if res["isSucceeded"]:
+        return JSONResponse(res["ret"], status_code=200)
+    else:
+        return JSONResponse({"error": res["ret"]}, status_code=400)
+
+
 @router_api.put("/rooms/{room_name}/admin")
 async def change_admin_user(room_name: str, room_req: models.RoomReq):
     res = await utils.change_admin_user(room_name, room_req.user_name)

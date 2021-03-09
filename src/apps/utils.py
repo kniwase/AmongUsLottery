@@ -1,6 +1,7 @@
 from settings import INDEX_PATH
 import models
 import random
+from typing import List
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -8,15 +9,8 @@ logging.basicConfig(level=logging.INFO)
 with open(INDEX_PATH, encoding="utf8") as f:
     INDEX_HTML = f.read()
 
-
-ROLE_TERUTERU = {
-    "name": "てるてる",
-    "count": 1,
-}
-ROLE_MADMAN = {
-    "name": "狂人",
-    "count": 1
-}
+ROLE_TERUTERU = {"name": "てるてる", "count": 1}
+ROLE_MADMAN = {"name": "狂人", "count": 1}
 
 
 rooms = {}
@@ -185,6 +179,24 @@ async def change_admin_user(room_name: str, user_name: str):
                 "isSucceeded": False,
                 "ret": "指定したユーザー名は存在しません"
             }
+    else:
+        res = {
+            "isSucceeded": False,
+            "ret": "指定した部屋は存在しません"
+        }
+    return res
+
+
+async def change_role_settings(room_name: str, roles: List[models.Role]):
+    if room_name in rooms.keys():
+        roles_dict = [r.dict() for r in roles]
+        rooms[room_name]["roles"] = roles_dict
+        rooms[room_name]["role_members"] = init_role_members(roles_dict)
+        logging.info(f'Role settings of "{room_name}" was changed.')
+        res = {
+            "isSucceeded": True,
+            "ret": rooms[room_name]
+        }
     else:
         res = {
             "isSucceeded": False,
