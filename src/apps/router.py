@@ -40,7 +40,7 @@ async def get_room_props(room_name: str):
         return JSONResponse({"error": res["ret"]}, status_code=400)
 
 
-@router_api.put("/rooms/{room_name}/winner", response_model=models.Room)
+@router_api.put("/rooms/{room_name}/lot", response_model=models.Room)
 async def draw_lot(room_name: str):
     res = await utils.draw_lot(room_name)
     if res["isSucceeded"]:
