@@ -139,7 +139,7 @@ module.exports = {
       store.commit("setRoomProps", roomProps);
       if (store.getters.joined) {
         if (store.getters.lotTimestamp !== lotTimestampPrev) {
-          if (!store.getters.lotTimestamp) {
+          if (store.getters.lotTimestamp) {
             let variant = "info";
             if (store.getters.myRole !== "通常役") {
               variant = "danger";
