@@ -186,8 +186,6 @@ async def change_role_settings(room_name: str, roles: List[models.Role]):
     if room_name in rooms.keys():
         roles_dict = [r.dict() for r in roles]
         rooms[room_name]["roles"] = roles_dict
-        rooms[room_name]["role_members"] = []
-        rooms[room_name]["lot_timestamp"] = None
         logging.info(f'Role settings of "{room_name}" was changed.')
         res = {
             "isSucceeded": True,
