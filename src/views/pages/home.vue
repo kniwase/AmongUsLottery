@@ -139,14 +139,18 @@ module.exports = {
       store.commit("setRoomProps", roomProps);
       if (store.getters.joined) {
         if (store.getters.lotTimestamp !== lotTimestampPrev) {
-          let variant = "info";
-          if (store.getters.myRole !== "通常役") {
-            variant = "danger";
+          if (!store.getters.lotTimestamp) {
+            let variant = "info";
+            if (store.getters.myRole !== "通常役") {
+              variant = "danger";
+            }
+            this.makeToast(
+              `あなたは ${store.getters.myRole} に選ばれました`,
+              variant
+            );
+          } else {
+            this.makeToast("抽選結果がリセットされました", "warning");
           }
-          this.makeToast(
-            `あなたは ${store.getters.myRole} に選ばれました`,
-            variant
-          );
         }
         if (!isAdminPrev && store.getters.isAdmin) {
           this.makeToast("管理者になりました", "secondary");
