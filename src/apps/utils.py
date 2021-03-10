@@ -1,6 +1,7 @@
 from settings import INDEX_PATH
 import models
 import random
+from datetime import datetime
 from typing import List
 import logging
 
@@ -29,6 +30,7 @@ async def create_room(room_req: models.RoomReq):
             "admin": room_req.user_name,
             "roles": roles,
             "role_members": [],
+            "lot_timestamp": None,
             "allow_god_mode": True
         }
         logging.info(
@@ -73,6 +75,7 @@ async def draw_lot(room_name: str):
             })
             members_randomized = members_randomized[role_count:]
         rooms[room_name]["role_members"] = role_members
+        rooms[room_name]["lot_timestamp"] = datetime.now().isoformat()
         logging.info(f'Role Memebers of Room "{room_name}" are changed')
         res = {
             "isSucceeded": True,
@@ -184,6 +187,7 @@ async def change_role_settings(room_name: str, roles: List[models.Role]):
         roles_dict = [r.dict() for r in roles]
         rooms[room_name]["roles"] = roles_dict
         rooms[room_name]["role_members"] = []
+        rooms[room_name]["lot_timestamp"] = None
         logging.info(f'Role settings of "{room_name}" was changed.')
         res = {
             "isSucceeded": True,
