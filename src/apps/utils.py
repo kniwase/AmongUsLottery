@@ -16,12 +16,6 @@ ROLE_MADMAN = {"name": "狂人", "count": 1}
 rooms = {}
 
 
-def init_role_members(roles):
-    role_members = [{"name": name, "members": []}
-                    for name in (r["name"] for r in roles)]
-    return role_members
-
-
 async def get_all_rooms():
     return list(rooms.values())
 
@@ -34,7 +28,7 @@ async def create_room(room_req: models.RoomReq):
             "members": [room_req.user_name],
             "admin": room_req.user_name,
             "roles": roles,
-            "role_members": init_role_members(roles),
+            "role_members": [],
             "allow_god_mode": True
         }
         logging.info(
@@ -69,14 +63,14 @@ async def draw_lot(room_name: str):
     if room_name in rooms.keys():
         members = rooms[room_name]["members"]
         members_randomized = random.sample(members, len(members))
-        role_members = {}
+        role_members = []
         for role in rooms[room_name]["roles"]:
             role_name = role["name"]
             role_count = role["count"]
-            role_members[role_name] = {
+            role_members.append({
                 "name": role_name,
                 "members": members_randomized[:role_count]
-            }
+            })
             members_randomized = members_randomized[role_count:]
         rooms[room_name]["role_members"] = role_members
         logging.info(f'Role Memebers of Room "{room_name}" are changed')
@@ -137,8 +131,6 @@ async def delete_member(room_name: str, user_name: str):
             if rooms[room_name]["members"]:
                 if rooms[room_name]["admin"] == user_name:
                     rooms[room_name]["admin"] = rooms[room_name]["members"][0]
-                if rooms[room_name]["winner"] == user_name:
-                    rooms[room_name]["winner"] = None
                 logging.info(f'"{user_name}" left from {room_name}.')
                 res = {
                     "isSucceeded": True,
@@ -191,7 +183,7 @@ async def change_role_settings(room_name: str, roles: List[models.Role]):
     if room_name in rooms.keys():
         roles_dict = [r.dict() for r in roles]
         rooms[room_name]["roles"] = roles_dict
-        rooms[room_name]["role_members"] = init_role_members(roles_dict)
+        rooms[room_name]["role_members"] = []
         logging.info(f'Role settings of "{room_name}" was changed.')
         res = {
             "isSucceeded": True,
