@@ -4,15 +4,41 @@
     title="部屋の設定"
     sub-title="ボタンを押すと警告なしで実行されるため気を付けてください"
   >
-    <div v-if="this.$store.getters.isAdmin">
-      <ul id="settings">
-        <li>
-          <p>他のユーザーを部屋から追い出す</p>
-          <b-container
+    <b-list-group v-if="this.$store.getters.isAdmin">
+      <b-list-group-item class="flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">特殊役の人数を設定する</h5>
+        </div>
+        <b-container>
+          <b-row
             class="mt-2"
-            v-if="this.$store.getters.otherMembers.length"
+            v-for="role in this.$store.getters.roles"
+            :key="role.id"
           >
-            <b-row class="d-flex justify-content-start">
+            <b-col>
+              <b>{{ role.name }}</b>
+            </b-col>
+            <b-col>
+              <b-form-select
+                :options="options[role.id]"
+                :value="selected[role.id]"
+                @input="onSelectRoleCount($event, role.id)"
+                size="sm"
+              ></b-form-select>
+            </b-col>
+          </b-row>
+        </b-container>
+      </b-list-group-item>
+      <b-list-group-item
+        class="flex-column align-items-start"
+        v-if="this.$store.getters.otherMembers.length"
+      >
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">他のユーザーを部屋から追い出す</h5>
+        </div>
+        <div class="mt-2">
+          <b-container class="mt-2">
+            <b-row>
               <b-col>
                 <b-form-select
                   v-model="userToBeDeleted"
@@ -24,7 +50,7 @@
                 を&nbsp;
                 <b-button
                   squared
-                  variant="outline-danger"
+                  variant="danger"
                   size="sm"
                   v-on:click="onKickUser"
                 >
@@ -33,51 +59,60 @@
               </b-col>
             </b-row>
           </b-container>
-          <p v-else>他のユーザーがいないため現在は実行できません</p>
-        </li>
-        <li class="mt-2">
-          <p>神の目（誰が特殊役か確認できる）機能の可否</p>
+        </div>
+      </b-list-group-item>
+      <b-list-group-item class="flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">他のユーザーの配役を確認する機能の可否</h5>
+        </div>
+        <div class="mt-2">
           <p>
             現在の設定:
             <b>{{ this.$store.getters.isGodModeAllowed ? "許可" : "拒否" }}</b>
             &nbsp;&nbsp;
             <b-button
               squared
-              variant="outline-info"
+              variant="info"
               size="sm"
               v-on:click="onToggleGodMode"
             >
               切り替える
             </b-button>
           </p>
-        </li>
-        <li class="mt-2">
-          <p>
-            この部屋を削除する&nbsp;&nbsp;
-            <b-button
-              squared
-              variant="outline-danger"
-              size="sm"
-              v-on:click="onDeleteRoom"
-            >
-              削除
-            </b-button>
-          </p>
-        </li>
-      </ul>
-    </div>
-    <div v-else>
-      <p class="mt-2">
-        設定は管理者のみが行えます&nbsp;&nbsp;
-        <b-button
-          squared
-          variant="danger"
-          size="sm"
-          v-on:click="onTakeOverAdmin"
-          >管理者権限を奪う</b-button
-        >
-      </p>
-    </div>
+        </div>
+      </b-list-group-item>
+      <b-list-group-item class="flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">この部屋を削除する</h5>
+        </div>
+        <div class="mt-2">
+          <b-button
+            squared
+            variant="danger"
+            size="sm"
+            v-on:click="onDeleteRoom"
+          >
+            削除
+          </b-button>
+        </div>
+      </b-list-group-item>
+    </b-list-group>
+    <b-list-group v-else>
+      <b-list-group-item class="flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">設定は管理者のみが行えます</h5>
+        </div>
+        <div class="mt-2">
+          <b-button
+            squared
+            variant="danger"
+            size="sm"
+            v-on:click="onTakeOverAdmin"
+            >管理者権限を奪う</b-button
+          >
+        </div>
+      </b-list-group-item>
+    </b-list-group>
   </b-card>
 </template>
 
@@ -87,12 +122,29 @@ module.exports = {
     return {
       updateRoomPropsTimer: null,
       userToBeDeleted: null,
+      selected: {},
+      options: {},
     };
   },
   methods: {
+    range(start, end) {
+      return [...Array(end).keys()].slice(start);
+    },
+    setSelections() {
+      this.selected = {};
+      this.options = {};
+      store.getters.roles.forEach((role) => {
+        this.selected[role.id] = role.count;
+        this.options[role.id] = this.range(0, 3).map((n) => {
+          return { value: n, text: `${n} 人` };
+        });
+      });
+    },
     commitRoomProps(roomProps) {
       store.commit("setRoomProps", roomProps);
-      if (!store.getters.joined) {
+      if (store.getters.joined) {
+        this.setSelections();
+      } else {
         router.push("/");
       }
     },
@@ -120,6 +172,23 @@ module.exports = {
         .put(`./api/rooms/${store.getters.roomName}/admin`, {
           user_name: store.getters.userName,
         })
+        .then((response) => {
+          // 受け取った値を保存する
+          this.commitRoomProps(response.data);
+        });
+    },
+    onSelectRoleCount(value, id) {
+      const roles_new = store.getters.roles.map((role) => {
+        return {
+          id: role.id,
+          name: role.name,
+          count: id === role.id ? value : role.count,
+        };
+      });
+      console.log(this.selected);
+      console.log(roles_new);
+      axios
+        .put(`./api/rooms/${store.getters.roomName}/roles`, roles_new)
         .then((response) => {
           // 受け取った値を保存する
           this.commitRoomProps(response.data);

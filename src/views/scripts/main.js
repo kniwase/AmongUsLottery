@@ -12,82 +12,81 @@ const store = new Vuex.Store({
     getters: {
         roomName: state => state.roomName,
         userName: state => state.userName,
-        isGodModeAllowed: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
-                return state.room.allow_god_mode
-            } else {
-                return false
-            }
-        },
         joined: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
+            if (Object.keys(state.room).length !== 0 && state.room.members.length !== 0) {
                 return true
             } else {
                 return false
             }
         },
+        isGodModeAllowed: state => {
+            if (Object.keys(state.room).length !== 0 && state.room.members.length !== 0) {
+                return state.room.allow_god_mode
+            } else {
+                return false
+            }
+        },
         members: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
+            if (Object.keys(state.room).length !== 0 && state.room.members.length !== 0) {
                 return state.room.members
             } else {
                 return []
             }
         },
-        admin: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
-                return state.room.admin
-            } else {
-                return ""
-            }
-        },
         isAdmin: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
-                if (state.room.admin && state.userName) {
-                    return state.room.admin === state.userName
-                } else {
-                    return false
-                }
+            if (Object.keys(state.room).length !== 0 && state.room.members.length !== 0 && state.userName) {
+                return state.room.admin === state.userName
             } else {
                 return false
             }
         },
-        winner: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
-                return state.room.winner
+        isRoleDecided: state => {
+            return Object.keys(state.room).length !== 0 && state.room.role_members.length !== 0;
+        },
+        roles: state => {
+            if (Object.keys(state.room).length !== 0) {
+                return state.room.roles;
+            } else {
+                return [];
+            }
+        },
+        myRole: state => {
+            if (Object.keys(state.room).length !== 0 && state.room.role_members.length !== 0 && state.userName) {
+                let role_name = "通常役";
+                state.room.role_members.forEach(role => {
+                    if (role.members.includes(state.userName)) {
+                        role_name = role.name;
+                    }
+                })
+                return role_name;
             } else {
                 return ""
-            }
-        },
-        isWinner: state => {
-            if (Object.keys(state.room).length && state.room.members.length !== 0) {
-                if (state.room.winner && state.userName) {
-                    return state.room.winner === state.userName
-                } else {
-                    return false
-                }
-            } else {
-                return false
             }
         },
         membersTable: state => {
-            if (Object.keys(state.room).length) {
+            if (Object.keys(state.room).length !== 0) {
                 return state.room.members.map((userName) => {
                     const row = {};
                     row["ユーザー名"] = userName;
-                    row["管理者"] = state.room.admin === userName ? "👑" : "";
+                    row["管理者"] = state.room.admin === userName ? "✔" : "";
                     return row;
                 });
             } else {
                 return []
             }
         },
-        membersTableWithWinner: state => {
-            if (Object.keys(state.room).length) {
+        membersTableWithRole: state => {
+            if (Object.keys(state.room).length !== 0) {
                 return state.room.members.map((userName) => {
                     const row = {};
                     row["ユーザー名"] = userName;
-                    row["管理者"] = state.room.admin === userName ? "👑" : "";
-                    row["特殊役"] = state.room.winner === userName ? "😏" : "";
+                    row["配役"] = "通常役";
+                    state.room.role_members.forEach(role => {
+                        if (role.members.includes(userName)) {
+                            row["配役"] = role.name;
+                        }
+                    })
+                    row["管理者"] = state.room.admin === userName ? "✔" : "";
                     return row;
                 });
             } else {
@@ -95,7 +94,7 @@ const store = new Vuex.Store({
             }
         },
         otherMembers: state => {
-            if (Object.keys(state.room).length) {
+            if (Object.keys(state.room).length !== 0) {
                 return state.room.members.filter(userName => userName !== state.userName);
             } else {
                 return []

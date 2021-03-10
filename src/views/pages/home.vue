@@ -11,12 +11,26 @@
         >
       </p>
     </b-container>
+    <b-card bg-variant="light" header="特殊役の設定">
+      <b-container>
+        <b-row
+          class="mt-2"
+          v-for="role in this.$store.getters.roles"
+          :key="role.id"
+        >
+          <b-col>
+            <b>{{ role.name }}</b>
+          </b-col>
+          <b-col> {{ role.count }} 人 </b-col>
+        </b-row>
+      </b-container>
+    </b-card>
     <b-card bg-variant="light" header="抽選結果">
       <p>
-        <span v-if="this.$store.getters.winner">
+        <span v-if="this.$store.getters.isRoleDecided">
           あなたは&nbsp;
           <strong>
-            {{ this.$store.getters.isWinner ? "特殊役" : "通常役" }}
+            {{ this.$store.getters.myRole }}
           </strong>
           &nbsp;です
         </span>
@@ -34,7 +48,7 @@
         <b-table
           striped
           hover
-          :items="this.$store.getters.membersTableWithWinner"
+          :items="this.$store.getters.membersTableWithRole"
         />
       </div>
       <div v-else>
@@ -42,10 +56,16 @@
       </div>
     </b-card>
     <b-card bg-variant="light" v-if="this.$store.getters.isGodModeAllowed">
+      <p>他のユーザーの配役を確認できます。</p>
       <p>
-        すべてを見通す目が欲しいあなたへ... &nbsp;&nbsp;
-        <b-button pill variant="danger" size="sm" :pressed.sync="isGodMode"
-          >神の目を{{ this.isGodMode ? "捨てる" : "得る" }}</b-button
+        現在の状態: <b>{{ this.isGodMode ? "表示" : "非表示" }}</b>
+        &nbsp;&nbsp;
+        <b-button
+          pill
+          variant="outline-danger"
+          size="sm"
+          :pressed.sync="isGodMode"
+          >切り替える</b-button
         >
       </p>
     </b-card>
@@ -205,7 +225,7 @@ module.exports = {
     },
     onDrawLot() {
       axios
-        .put(`./api/rooms/${store.getters.roomName}/winner`)
+        .put(`./api/rooms/${store.getters.roomName}/lot`)
         .then((response) => {
           // 受け取った値を保存する
           this.commitRoomProps(response.data);

@@ -40,7 +40,7 @@ async def get_room_props(room_name: str):
         return JSONResponse({"error": res["ret"]}, status_code=400)
 
 
-@router_api.put("/rooms/{room_name}/winner", response_model=models.Room)
+@router_api.put("/rooms/{room_name}/lot", response_model=models.Room)
 async def draw_lot(room_name: str):
     res = await utils.draw_lot(room_name)
     if res["isSucceeded"]:
@@ -70,6 +70,15 @@ async def join_to_room(room_name: str, room_req: models.RoomReq):
 @router_api.delete("/rooms/{room_name}/members/{user_name}")
 async def delete_member(room_name: str, user_name: str):
     res = await utils.delete_member(room_name, user_name)
+    if res["isSucceeded"]:
+        return JSONResponse(res["ret"], status_code=200)
+    else:
+        return JSONResponse({"error": res["ret"]}, status_code=400)
+
+
+@router_api.put("/rooms/{room_name}/roles", response_model=models.Room)
+async def change_role_settings(room_name: str, roles: List[models.Role]):
+    res = await utils.change_role_settings(room_name, roles)
     if res["isSucceeded"]:
         return JSONResponse(res["ret"], status_code=200)
     else:

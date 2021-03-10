@@ -7,9 +7,21 @@ class RoomReq(BaseModel):
     user_name: str
 
 
+class Role(BaseModel):
+    id: str
+    name: str
+    count: int
+
+
+class RoleMembers(BaseModel):
+    name: str
+    members: List[str]
+
+
 class Room(BaseModel):
     room_name: str
     members: List[str]
     admin: str
-    winner: Optional[str]
+    roles: List[Role]
+    role_members: List[RoleMembers]
     allow_god_mode: bool
