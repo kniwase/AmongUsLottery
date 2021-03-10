@@ -22,7 +22,7 @@
               <b-form-select
                 :options="options[role.id]"
                 :value="selected[role.id]"
-                @input="onSelectRoleCount($event, role.id)"
+                @change="onSelectRoleCount($event, role.id)"
                 size="sm"
               ></b-form-select>
             </b-col>

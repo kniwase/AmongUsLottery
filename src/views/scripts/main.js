@@ -63,6 +63,13 @@ const store = new Vuex.Store({
                 return ""
             }
         },
+        lotTimestamp: state => {
+            if (Object.keys(state.room).length !== 0) {
+                return state.room.lot_timestamp;
+            } else {
+                return null
+            }
+        },
         membersTable: state => {
             if (Object.keys(state.room).length !== 0) {
                 return state.room.members.map((userName) => {

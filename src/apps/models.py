@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from datetime import datetime
 
 
 class RoomReq(BaseModel):
@@ -24,4 +25,5 @@ class Room(BaseModel):
     admin: str
     roles: List[Role]
     role_members: List[RoleMembers]
+    lot_timestamp: Optional[datetime]
     allow_god_mode: bool

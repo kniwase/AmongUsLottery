@@ -134,15 +134,25 @@ module.exports = {
       });
     },
     commitRoomProps(roomProps) {
-      const isWinnerPrev = store.getters.isWinner;
+      const lotTimestampPrev = store.getters.lotTimestamp;
       const isAdminPrev = store.getters.isAdmin;
       store.commit("setRoomProps", roomProps);
       if (store.getters.joined) {
-        if (!isWinnerPrev && store.getters.isWinner) {
-          this.makeToast("特殊役になりました", "danger");
-        } else if (isWinnerPrev && !store.getters.isWinner) {
-          this.makeToast("通常役になりました", "info");
-        } else if (!isAdminPrev && store.getters.isAdmin) {
+        if (store.getters.lotTimestamp !== lotTimestampPrev) {
+          if (store.getters.lotTimestamp) {
+            let variant = "info";
+            if (store.getters.myRole !== "通常役") {
+              variant = "danger";
+            }
+            this.makeToast(
+              `あなたは ${store.getters.myRole} に選ばれました`,
+              variant
+            );
+          } else {
+            this.makeToast("抽選結果がリセットされました", "warning");
+          }
+        }
+        if (!isAdminPrev && store.getters.isAdmin) {
           this.makeToast("管理者になりました", "secondary");
         } else if (isAdminPrev && !store.getters.isAdmin) {
           this.makeToast("管理者権限を奪われました", "secondary");
