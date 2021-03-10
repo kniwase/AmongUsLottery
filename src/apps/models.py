@@ -8,6 +8,7 @@ class RoomReq(BaseModel):
 
 
 class Role(BaseModel):
+    id: str
     name: str
     count: int
 

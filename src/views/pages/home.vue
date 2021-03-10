@@ -11,6 +11,20 @@
         >
       </p>
     </b-container>
+    <b-card bg-variant="light" header="特殊役の設定">
+      <b-container>
+        <b-row
+          class="mt-2"
+          v-for="role in this.$store.getters.roles"
+          :key="role.id"
+        >
+          <b-col>
+            <b>{{ role.name }}</b>
+          </b-col>
+          <b-col> {{ role.count }} 人 </b-col>
+        </b-row>
+      </b-container>
+    </b-card>
     <b-card bg-variant="light" header="抽選結果">
       <p>
         <span v-if="this.$store.getters.isRoleDecided">

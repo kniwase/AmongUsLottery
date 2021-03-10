@@ -43,6 +43,13 @@ const store = new Vuex.Store({
         isRoleDecided: state => {
             return Object.keys(state.room).length !== 0 && state.room.role_members.length !== 0;
         },
+        roles: state => {
+            if (Object.keys(state.room).length !== 0) {
+                return state.room.roles;
+            } else {
+                return [];
+            }
+        },
         myRole: state => {
             if (Object.keys(state.room).length !== 0 && state.room.role_members.length !== 0 && state.userName) {
                 let role_name = "通常役";

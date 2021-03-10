@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.INFO)
 with open(INDEX_PATH, encoding="utf8") as f:
     INDEX_HTML = f.read()
 
-ROLE_TERUTERU = {"name": "てるてる", "count": 1}
-ROLE_MADMAN = {"name": "狂人", "count": 1}
+ROLE_TERUTERU = {"id": "teruteru", "name": "てるてる", "count": 1}
+ROLE_MADMAN = {"id": "madman", "name": "狂人", "count": 1}
 
 
 rooms = {}
