@@ -137,5 +137,8 @@ const router = new VueRouter({
 const app = new Vue({
     el: "#app",
     store: store,
-    router: router
+    router: router,
+    components: {
+        'top-page': httpVueLoader('./pages/top.vue')
+    }
 });
