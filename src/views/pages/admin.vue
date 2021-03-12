@@ -4,7 +4,7 @@
     title="部屋の設定"
     sub-title="ボタンを押すと警告なしで実行されるため気を付けてください"
   >
-    <b-list-group v-if="this.$store.getters.isAdmin">
+    <b-list-group v-if="this.isAdmin">
       <b-list-group-item class="flex-column align-items-start">
         <div class="d-flex w-100 justify-content-between">
           <h5 class="mb-1">特殊役の人数を設定する</h5>
@@ -12,7 +12,7 @@
         <b-container>
           <b-row
             class="mt-2"
-            v-for="role in this.$store.getters.roles"
+            v-for="role in this.roles"
             :key="role.id"
           >
             <b-col>
@@ -31,7 +31,7 @@
       </b-list-group-item>
       <b-list-group-item
         class="flex-column align-items-start"
-        v-if="this.$store.getters.otherMembers.length"
+        v-if="this.otherMembers.length"
       >
         <div class="d-flex w-100 justify-content-between">
           <h5 class="mb-1">他のユーザーを部屋から追い出す</h5>
@@ -42,7 +42,7 @@
               <b-col>
                 <b-form-select
                   v-model="userToBeDeleted"
-                  :options="this.$store.getters.otherMembers"
+                  :options="this.otherMembers"
                   size="sm"
                 ></b-form-select>
               </b-col>
@@ -68,7 +68,7 @@
         <div class="mt-2">
           <p>
             現在の設定:
-            <b>{{ this.$store.getters.isGodModeAllowed ? "許可" : "拒否" }}</b>
+            <b>{{ this.isGodModeAllowed ? "許可" : "拒否" }}</b>
             &nbsp;&nbsp;
             <b-button
               squared
@@ -120,11 +120,20 @@
 module.exports = {
   data: () => {
     return {
-      updateRoomPropsTimer: null,
       userToBeDeleted: null,
       selected: {},
       options: {},
     };
+  },
+  computed: {
+    ...Vuex.mapGetters([
+      "roomName",
+      "userName",
+      "roles",
+      "isGodModeAllowed",
+      "isAdmin",
+      "otherMembers"
+    ]),
   },
   methods: {
     range(start, end) {
@@ -133,52 +142,25 @@ module.exports = {
     setSelections() {
       this.selected = {};
       this.options = {};
-      store.getters.roles.forEach((role) => {
+      this.roles.forEach((role) => {
         this.selected[role.id] = role.count;
         this.options[role.id] = this.range(0, 3).map((n) => {
           return { value: n, text: `${n} 人` };
         });
       });
     },
-    commitRoomProps(roomProps) {
-      store.commit("setRoomProps", roomProps);
-      if (store.getters.joined) {
-        this.setSelections();
-      } else {
-        router.push("/");
-      }
-    },
-    updateRoomProps() {
-      axios
-        .get(`./api/rooms/${store.getters.roomName}`)
-        .then((response) => {
-          this.commitRoomProps(response.data);
-        })
-        .catch(() => {
-          this.clearUpdateRoomPropsTimer();
-          this.commitRoomProps({});
-        });
-    },
-    setUpdateRoomPropsTimer() {
-      this.updateRoomPropsTimer = setInterval(this.updateRoomProps, 2000);
-    },
-    clearUpdateRoomPropsTimer() {
-      if (this.updateRoomPropsTimer !== null) {
-        clearInterval(this.updateRoomPropsTimer);
-      }
-    },
     onTakeOverAdmin() {
       axios
-        .put(`./api/rooms/${store.getters.roomName}/admin`, {
-          user_name: store.getters.userName,
+        .put(`./api/rooms/${this.roomName}/admin`, {
+          user_name: this.userName,
         })
         .then((response) => {
           // 受け取った値を保存する
-          this.commitRoomProps(response.data);
+          store.commit("setRoomProps", response.data);
         });
     },
     onSelectRoleCount(value, id) {
-      const roles_new = store.getters.roles.map((role) => {
+      const roles_new = this.roles.map((role) => {
         return {
           id: role.id,
           name: role.name,
@@ -188,38 +170,37 @@ module.exports = {
       console.log(this.selected);
       console.log(roles_new);
       axios
-        .put(`./api/rooms/${store.getters.roomName}/roles`, roles_new)
+        .put(`./api/rooms/${this.roomName}/roles`, roles_new)
         .then((response) => {
           // 受け取った値を保存する
-          this.commitRoomProps(response.data);
+          store.commit("setRoomProps", response.data);
         });
     },
     onKickUser() {
       if (this.userToBeDeleted) {
         axios
           .delete(
-            `./api/rooms/${store.getters.roomName}/members/${this.userToBeDeleted}`
+            `./api/rooms/${this.roomName}/members/${this.userToBeDeleted}`
           )
           .then(() => {
-            this.commitRoomProps({});
+            store.commit("setRoomProps", response.data);
           });
       }
     },
     onToggleGodMode() {
       axios
-        .put(`./api/rooms/${store.getters.roomName}/godmode`)
+        .put(`./api/rooms/${this.roomName}/godmode`)
         .then((response) => {
           // 受け取った値を保存する
-          this.commitRoomProps(response.data);
+          store.commit("setRoomProps", response.data);
         });
     },
     onDeleteRoom() {
-      const roomName = store.getters.roomName;
-      this.clearUpdateRoomPropsTimer();
-      this.saveNames("", store.getters.userName);
+      const roomName = this.roomName;
+      this.saveNames("", this.userName);
       store.commit("setRoomName", "");
       axios.delete(`./api/rooms/${roomName}`).then(() => {
-        this.commitRoomProps({});
+        store.commit("setRoomProps", {});
       });
     },
     saveNames(roomName, userName) {
@@ -231,15 +212,6 @@ module.exports = {
         })
       );
     },
-  },
-  mounted() {
-    this.updateRoomProps();
-    if (store.getters.joined) {
-      this.setUpdateRoomPropsTimer();
-    }
-  },
-  destroyed() {
-    this.clearUpdateRoomPropsTimer();
   },
 };
 </script>
