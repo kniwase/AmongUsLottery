@@ -154,7 +154,6 @@ module.exports = {
           return { value: n, text: `${n} 人` };
         });
       });
-      console.log(this.options);
     },
     onTakeOverAdmin() {
       axios.put(`./api/rooms/${this.roomName}/admin`, {
