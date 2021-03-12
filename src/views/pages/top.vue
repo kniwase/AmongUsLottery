@@ -36,7 +36,7 @@
 module.exports = {
   data: () => {
     return {
-      fetchRoomPropsTimerId: null,
+      subscription: null,
     };
   },
   computed: {
@@ -50,23 +50,23 @@ module.exports = {
     ]),
   },
   methods: {
-    fetchRoomProps() {
-      axios
-        .get(`./api/rooms/${this.roomName}`)
-        .then((response) => {
-          store.commit("setRoomProps", response.data);
-        })
-        .catch(() => {
-          this.clearFetchRoomPropsTimer();
-          store.commit("setRoomProps", {});
-        });
+    subscribeRoomPropsUpdate() {
+      this.subscription = new EventSource(
+        `./api/rooms/${this.roomName}/subscription`
+      );
+      this.subscription.onmessage = (event) => {
+        const roomProps = JSON.parse(event.data);
+        console.log(roomProps);
+        store.commit("setRoomProps", roomProps);
+      };
+      this.subscription.onerror = () => {
+        this.subscription.close();
+        store.commit("setRoomProps", {});
+      };
     },
-    setFetchRoomPropsTimer() {
-      this.fetchRoomPropsTimerId = setInterval(this.fetchRoomProps, 2000);
-    },
-    clearFetchRoomPropsTimer() {
-      if (this.fetchRoomPropsTimerId !== null) {
-        clearInterval(this.fetchRoomPropsTimerId);
+    unsubscribeRoomPropsUpdate() {
+      if (this.subscription) {
+        this.subscription.close();
       }
     },
     makeToast(message, variant = null) {
@@ -82,9 +82,9 @@ module.exports = {
     joined(joined, joinedPrev) {
       if (joined !== joinedPrev) {
         if (joined) {
-          this.setFetchRoomPropsTimer();
+          this.subscribeRoomPropsUpdate();
         } else {
-          this.clearFetchRoomPropsTimer();
+          this.unsubscribeRoomPropsUpdate();
           if (this.$route.path === "/admin") {
             router.push("/");
           }
@@ -117,11 +117,11 @@ module.exports = {
   mounted() {
     if (this.joined) {
       this.fetchRoomProps();
-      this.setFetchRoomPropsTimer();
+      this.subscribeRoomPropsUpdate();
     }
   },
   destroyed() {
-    this.clearFetchRoomPropsTimer();
+    this.unsubscribeRoomPropsUpdate();
   },
 };
 </script>

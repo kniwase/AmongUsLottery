@@ -10,11 +10,7 @@
           <h5 class="mb-1">特殊役の人数を設定する</h5>
         </div>
         <b-container>
-          <b-row
-            class="mt-2"
-            v-for="role in this.roles"
-            :key="role.id"
-          >
+          <b-row class="mt-2" v-for="role in this.roles" :key="role.id">
             <b-col>
               <b>{{ role.name }}</b>
             </b-col>
@@ -132,12 +128,22 @@ module.exports = {
       "roles",
       "isGodModeAllowed",
       "isAdmin",
-      "otherMembers"
+      "otherMembers",
     ]),
   },
   methods: {
     range(start, end) {
       return [...Array(end).keys()].slice(start);
+    },
+    fetchRoomProps(roomName) {
+      axios
+        .get(`./api/rooms/${roomName}`)
+        .then((response) => {
+          store.commit("setRoomProps", response.data);
+        })
+        .catch(() => {
+          store.commit("setRoomProps", {});
+        });
     },
     setSelections() {
       this.selected = {};
@@ -148,16 +154,12 @@ module.exports = {
           return { value: n, text: `${n} 人` };
         });
       });
+      console.log(this.options);
     },
     onTakeOverAdmin() {
-      axios
-        .put(`./api/rooms/${this.roomName}/admin`, {
-          user_name: this.userName,
-        })
-        .then((response) => {
-          // 受け取った値を保存する
-          store.commit("setRoomProps", response.data);
-        });
+      axios.put(`./api/rooms/${this.roomName}/admin`, {
+        user_name: this.userName,
+      });
     },
     onSelectRoleCount(value, id) {
       const roles_new = this.roles.map((role) => {
@@ -167,41 +169,23 @@ module.exports = {
           count: id === role.id ? value : role.count,
         };
       });
-      console.log(this.selected);
-      console.log(roles_new);
-      axios
-        .put(`./api/rooms/${this.roomName}/roles`, roles_new)
-        .then((response) => {
-          // 受け取った値を保存する
-          store.commit("setRoomProps", response.data);
-        });
+      axios.put(`./api/rooms/${this.roomName}/roles`, roles_new);
     },
     onKickUser() {
       if (this.userToBeDeleted) {
-        axios
-          .delete(
-            `./api/rooms/${this.roomName}/members/${this.userToBeDeleted}`
-          )
-          .then(() => {
-            store.commit("setRoomProps", response.data);
-          });
+        axios.delete(
+          `./api/rooms/${this.roomName}/members/${this.userToBeDeleted}`
+        );
       }
     },
     onToggleGodMode() {
-      axios
-        .put(`./api/rooms/${this.roomName}/godmode`)
-        .then((response) => {
-          // 受け取った値を保存する
-          store.commit("setRoomProps", response.data);
-        });
+      axios.put(`./api/rooms/${this.roomName}/godmode`);
     },
     onDeleteRoom() {
       const roomName = this.roomName;
       this.saveNames("", this.userName);
       store.commit("setRoomName", "");
-      axios.delete(`./api/rooms/${roomName}`).then(() => {
-        store.commit("setRoomProps", {});
-      });
+      axios.delete(`./api/rooms/${roomName}`);
     },
     saveNames(roomName, userName) {
       localStorage.setItem(
@@ -212,6 +196,15 @@ module.exports = {
         })
       );
     },
+  },
+  watch: {
+    roles() {
+      this.setSelections();
+    },
+  },
+  mounted() {
+    this.setSelections();
+    this.fetchRoomProps(this.roomName);
   },
 };
 </script>

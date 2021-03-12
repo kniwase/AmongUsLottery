@@ -179,17 +179,10 @@ module.exports = {
       this.saveNames("", this.userName);
       this.roomNameInput = "";
       store.commit("setRoomName", "");
-      axios
-        .delete(`./api/rooms/${roomName}/members/${this.userName}`)
-        .then(() => {
-          store.commit("setRoomProps", {});
-        });
+      axios.delete(`./api/rooms/${roomName}/members/${this.userName}`);
     },
     onDrawLot() {
-      axios.put(`./api/rooms/${this.roomName}/lot`).then((response) => {
-        // 受け取った値を保存する
-        store.commit("setRoomProps", response.data);
-      });
+      axios.put(`./api/rooms/${this.roomName}/lot`);
     },
     saveNames(roomName, userName) {
       localStorage.setItem(
