@@ -170,7 +170,10 @@ async def delete_member(room_name: str, user_name: str):
             room_props["members"].remove(user_name)
             if room_props["members"]:
                 if room_props["admin"] == user_name:
-                    room_props["admin"] = room_props["members"][0]
+                    user_name = room_props["members"][0]
+                    room_props["admin"] = user_name
+                    logging.info(
+                        f'Admin user of "{room_name}" was changed to "{user_name}".')
                 await update_room_props(room_name, room_props)
                 logging.info(f'"{user_name}" left from {room_name}.')
                 res = {
@@ -178,7 +181,7 @@ async def delete_member(room_name: str, user_name: str):
                     "ret": room_props
                 }
             else:
-                rooms.pop(room_name)
+                await delete_room_props(room_name)
                 logging.info(f'Room "{room_name}" was deleted.')
                 res = {
                     "isSucceeded": True,
