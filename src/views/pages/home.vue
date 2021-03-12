@@ -1,10 +1,10 @@
 <template>
-  <div v-if="this.$store.getters.joined">
+  <div v-if="this.joined">
     <b-container class="d-flex justify-content-center">
       <p class="mt-2">
-        <b>{{ this.$store.getters.roomName }}</b>
+        <b>{{ this.roomName }}</b>
         &nbsp;に&nbsp;
-        <b>{{ this.$store.getters.userName }}</b>
+        <b>{{ this.userName }}</b>
         &nbsp;として参加&nbsp;&nbsp;
         <b-button pill variant="outline-danger" size="sm" v-on:click="onExit"
           >退出する</b-button
@@ -13,11 +13,7 @@
     </b-container>
     <b-card bg-variant="light" header="特殊役の設定">
       <b-container>
-        <b-row
-          class="mt-2"
-          v-for="role in this.$store.getters.roles"
-          :key="role.id"
-        >
+        <b-row class="mt-2" v-for="role in this.roles" :key="role.id">
           <b-col>
             <b>{{ role.name }}</b>
           </b-col>
@@ -27,15 +23,15 @@
     </b-card>
     <b-card bg-variant="light" header="抽選結果">
       <p>
-        <span v-if="this.$store.getters.isRoleDecided">
+        <span v-if="this.isRoleDecided">
           あなたは&nbsp;
           <strong>
-            {{ this.$store.getters.myRole }}
+            {{ this.myRole }}
           </strong>
           &nbsp;です
         </span>
         <span v-else>まだ抽選が行われていません</span>
-        <span v-if="this.$store.getters.isAdmin">
+        <span v-if="this.isAdmin">
           &nbsp;&nbsp;
           <b-button pill variant="primary" size="sm" v-on:click="onDrawLot">
             抽選
@@ -44,18 +40,14 @@
       </p>
     </b-card>
     <b-card bg-variant="light" header="メンバー">
-      <div v-if="this.isGodMode && this.$store.getters.isGodModeAllowed">
-        <b-table
-          striped
-          hover
-          :items="this.$store.getters.membersTableWithRole"
-        />
+      <div v-if="this.isGodMode && this.isGodModeAllowed">
+        <b-table striped hover :items="this.membersTableWithRole" />
       </div>
       <div v-else>
-        <b-table striped hover :items="this.$store.getters.membersTable" />
+        <b-table striped hover :items="this.membersTable" />
       </div>
     </b-card>
-    <b-card bg-variant="light" v-if="this.$store.getters.isGodModeAllowed">
+    <b-card bg-variant="light" v-if="this.isGodModeAllowed">
       <p>他のユーザーの配役を確認できます。</p>
       <p>
         現在の状態: <b>{{ this.isGodMode ? "表示" : "非表示" }}</b>
@@ -85,7 +77,7 @@
         >
           <b-form-input
             id="input-1"
-            v-model="roomName"
+            v-model="roomNameInput"
             placeholder="部屋名を入力"
             required
           ></b-form-input>
@@ -99,7 +91,7 @@
         >
           <b-form-input
             id="input-2"
-            v-model="userName"
+            v-model="userNameInput"
             placeholder="ユーザー名を入力"
             required
           ></b-form-input>
@@ -118,72 +110,33 @@
 module.exports = {
   data: () => {
     return {
-      roomName: store.getters.roomName ? store.getters.roomName : "",
-      userName: store.getters.userName ? store.getters.userName : "",
+      roomNameInput: "",
+      userNameInput: "",
       isGodMode: false,
       updateRoomPropsTimer: null,
     };
   },
+  computed: {
+    ...Vuex.mapGetters([
+      "roomName",
+      "userName",
+      "joined",
+      "members",
+      "roles",
+      "isRoleDecided",
+      "isGodModeAllowed",
+      "myRole",
+      "isAdmin",
+      "membersTable",
+      "membersTableWithRole",
+    ]),
+  },
   methods: {
-    makeToast(message, variant = null) {
-      this.$bvToast.toast(message, {
-        title: "通知",
-        autoHideDelay: 5000,
-        variant: variant,
-        solid: true,
-      });
-    },
-    commitRoomProps(roomProps) {
-      const lotTimestampPrev = store.getters.lotTimestamp;
-      const isAdminPrev = store.getters.isAdmin;
-      store.commit("setRoomProps", roomProps);
-      if (store.getters.joined) {
-        if (store.getters.lotTimestamp !== lotTimestampPrev) {
-          if (store.getters.lotTimestamp) {
-            let variant = "info";
-            if (store.getters.myRole !== "通常役") {
-              variant = "danger";
-            }
-            this.makeToast(
-              `あなたは ${store.getters.myRole} に選ばれました`,
-              variant
-            );
-          } else {
-            this.makeToast("抽選結果がリセットされました", "warning");
-          }
-        }
-        if (!isAdminPrev && store.getters.isAdmin) {
-          this.makeToast("管理者になりました", "secondary");
-        } else if (isAdminPrev && !store.getters.isAdmin) {
-          this.makeToast("管理者権限を奪われました", "secondary");
-        }
-      }
-    },
-    updateRoomProps() {
-      axios
-        .get(`./api/rooms/${store.getters.roomName}`)
-        .then((response) => {
-          this.commitRoomProps(response.data);
-        })
-        .catch(() => {
-          this.clearUpdateRoomPropsTimer();
-          this.commitRoomProps({});
-        });
-    },
-    setUpdateRoomPropsTimer() {
-      this.updateRoomPropsTimer = setInterval(this.updateRoomProps, 2000);
-    },
-    clearUpdateRoomPropsTimer() {
-      if (this.updateRoomPropsTimer !== null) {
-        clearInterval(this.updateRoomPropsTimer);
-      }
-    },
-    callbackAfterEntered(roomName, userName, roomProps) {
+    storeUserProps(roomName, userName, roomProps) {
       store.commit("setRoomName", roomName);
       store.commit("setUserName", userName);
-      this.commitRoomProps(roomProps);
-      this.saveNames(store.getters.roomName, store.getters.userName);
-      this.setUpdateRoomPropsTimer();
+      store.commit("setRoomProps", roomProps);
+      this.saveNames(roomName, userName);
     },
     enterRoom(roomName, userName) {
       axios
@@ -192,14 +145,14 @@ module.exports = {
           // 部屋が存在するので、ユーザーがメンバーに含まれるか確認する
           if (response.data.members.includes(userName)) {
             // メンバーに含まれる場合、受け取った値を保存する
-            this.callbackAfterEntered(roomName, userName, response.data);
+            this.storeUserProps(roomName, userName, response.data);
           } else {
             // メンバーに含まれない場合、メンバーを追加する
             axios
               .post(`./api/rooms/${roomName}/members`, { user_name: userName })
               .then((response) => {
                 // 受け取った値を保存する
-                this.callbackAfterEntered(roomName, userName, response.data);
+                this.storeUserProps(roomName, userName, response.data);
               });
           }
         })
@@ -208,38 +161,28 @@ module.exports = {
           axios
             .post("./api/rooms", { room_name: roomName, user_name: userName })
             .then((response) => {
-              this.callbackAfterEntered(roomName, userName, response.data);
+              this.storeUserProps(roomName, userName, response.data);
             });
         });
     },
     onSubmit(event) {
       event.preventDefault();
-      this.enterRoom(this.roomName, this.userName);
+      this.enterRoom(this.roomNameInput, this.userNameInput);
     },
     onReset(event) {
       event.preventDefault();
-      this.roomName = "";
-      this.userName = "";
+      this.roomNameInput = "";
+      this.userNameInput = "";
     },
     onExit() {
-      const roomName = store.getters.roomName;
-      this.clearUpdateRoomPropsTimer();
-      this.saveNames("", store.getters.userName);
-      this.roomName = "";
+      const roomName = this.roomName;
+      this.saveNames("", this.userName);
+      this.roomNameInput = "";
       store.commit("setRoomName", "");
-      axios
-        .delete(`./api/rooms/${roomName}/members/${store.getters.userName}`)
-        .then(() => {
-          this.commitRoomProps({});
-        });
+      axios.delete(`./api/rooms/${roomName}/members/${this.userName}`);
     },
     onDrawLot() {
-      axios
-        .put(`./api/rooms/${store.getters.roomName}/lot`)
-        .then((response) => {
-          // 受け取った値を保存する
-          this.commitRoomProps(response.data);
-        });
+      axios.put(`./api/rooms/${this.roomName}/lot`);
     },
     saveNames(roomName, userName) {
       localStorage.setItem(
@@ -252,18 +195,11 @@ module.exports = {
     },
   },
   mounted() {
-    this.isGodMode = false;
-    if (store.getters.joined) {
-      this.updateRoomProps();
-      this.setUpdateRoomPropsTimer();
-    } else {
-      if (store.getters.roomName && store.getters.userName) {
-        this.enterRoom(store.getters.roomName, store.getters.userName);
-      }
+    this.roomNameInput = this.roomName;
+    this.userNameInput = this.userName;
+    if (!this.joined && this.roomName && this.userName) {
+      this.enterRoom(this.roomName, this.userName);
     }
-  },
-  destroyed() {
-    this.clearUpdateRoomPropsTimer();
   },
 };
 </script>

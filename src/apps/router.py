@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+from sse_starlette.sse import EventSourceResponse
 from typing import List
 import utils
 import models
@@ -99,5 +100,14 @@ async def toggle_god_mode(room_name: str):
     res = await utils.toggle_god_mode(room_name)
     if res["isSucceeded"]:
         return JSONResponse(res["ret"], status_code=202)
+    else:
+        return JSONResponse({"error": res["ret"]}, status_code=400)
+
+
+@router_api.get("/rooms/{room_name}/subscription")
+async def create_subscription(room_name: str, request: Request):
+    res = await utils.create_subscription(request, room_name)
+    if res["isSucceeded"]:
+        return EventSourceResponse(res["ret"], status_code=200)
     else:
         return JSONResponse({"error": res["ret"]}, status_code=400)
