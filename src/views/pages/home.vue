@@ -6,9 +6,9 @@
         &nbsp;に&nbsp;
         <b>{{ this.userName }}</b>
         &nbsp;として参加&nbsp;&nbsp;
-        <b-button pill variant="outline-danger" size="sm" v-on:click="onExit"
-          >退出する</b-button
-        >
+        <b-button pill variant="outline-danger" size="sm" v-on:click="onExit">
+          退出する
+        </b-button>
       </p>
     </b-container>
     <b-card bg-variant="light" header="特殊役の設定">
@@ -39,7 +39,7 @@
         </span>
       </p>
     </b-card>
-    <b-card bg-variant="light" header="メンバー">
+    <b-card bg-variant="light" :header="`メンバー（合計: ${membersTable.length} 人）`">
       <div v-if="this.isGodMode && this.isGodModeAllowed">
         <b-table striped hover :items="this.membersTableWithRole" />
       </div>
@@ -98,9 +98,9 @@
         </b-form-group>
 
         <b-button type="submit" variant="primary">部屋に入る</b-button>
-        <b-button type="reset" variant="outline-danger"
-          >入力をリセット</b-button
-        >
+        <b-button type="reset" variant="outline-danger">
+          入力をリセット
+        </b-button>
       </b-form>
     </b-card>
   </div>
